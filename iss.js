@@ -13,7 +13,7 @@ const fetchMyIP = function(callback) {
     callback(null, IP);
   });
 };
-//use: 162.222.82.242
+
 const fetchCoordsByIP = function(ip, callback) {
   request(`https://freegeoip.app/json/${ip}`, (error, response, body) => {
     if (error) return callback(error, null);
@@ -33,8 +33,6 @@ const fetchCoordsByIP = function(ip, callback) {
   });
 };
 
-//http://api.open-notify.org/iss-pass.json?lat=LAT&lon=LON
-
 const fetchISSFlyOverTimes = function(coords, callback) {
   request(`http://api.open-notify.org/iss-pass.json?lat=${coords.latitude}&lon=${coords.longitude}`, (error, response, body) => {
     if (error) return callback(error, null);
@@ -50,9 +48,35 @@ const fetchISSFlyOverTimes = function(coords, callback) {
   });
 };
 
+const nextISSTimesForMyLocation = function(callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      callback(error, null);
+      //console.log("It didn't work!", error);
+      return;
+    }
+    fetchCoordsByIP(ip, (err, coordinates) => {
+      if (err) {
+        callback(error, null);
+        //console.log("It didn't work!", err.message);
+        return;
+      }
+      fetchISSFlyOverTimes(coordinates, (err, flyovers) => {
+        if (err) {
+          callback(error, null);
+          //console.log("It didn't work!", err.message);
+          return;
+        }
+        callback(null, flyovers);
+        //console.log("It worked! Returned Coordinates:", flyovers);
+      });
+    });
+  });
+};
 
 module.exports = {
   fetchMyIP,
   fetchCoordsByIP,
-  fetchISSFlyOverTimes
+  fetchISSFlyOverTimes,
+  nextISSTimesForMyLocation
 };
